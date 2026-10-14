@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import '../models/todo.dart';
+import '../state/todo_scope.dart';
 
 class EditTodoScreen extends StatefulWidget {
-  final Todo todo;
-  final ValueChanged<Todo> onSave;
+  final String todoId;
 
-  const EditTodoScreen({super.key, required this.todo, required this.onSave});
+  const EditTodoScreen({super.key, required this.todoId});
 
   @override
   State<EditTodoScreen> createState() => _EditTodoScreenState();
@@ -17,10 +16,11 @@ class _EditTodoScreenState extends State<EditTodoScreen> {
   String? _errorText;
 
   @override
-  void initState() {
-    super.initState();
-    _titleController = TextEditingController(text: widget.todo.title);
-    _descController = TextEditingController(text: widget.todo.description);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final todo = TodoScope.of(context).todos.firstWhere((t) => t.id == widget.todoId);
+    _titleController = TextEditingController(text: todo.title);
+    _descController = TextEditingController(text: todo.description);
   }
 
   @override
@@ -33,17 +33,18 @@ class _EditTodoScreenState extends State<EditTodoScreen> {
   void _handleSave() {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      setState(() {
-        _errorText = 'Назва не може бути порожньою';
-      });
+      setState(() => _errorText = 'Назва не може бути порожньою');
       return;
     }
 
-    final updated = widget.todo.copyWith(
+    final todoModel = TodoScope.of(context);
+    final currentTodo = todoModel.todos.firstWhere((t) => t.id == widget.todoId);
+
+    final updated = currentTodo.copyWith(
       title: title,
       description: _descController.text.trim(),
     );
-    widget.onSave(updated);
+    todoModel.update(updated);
     Navigator.pop(context);
   }
 
@@ -66,11 +67,6 @@ class _EditTodoScreenState extends State<EditTodoScreen> {
                 labelText: 'Назва',
                 errorText: _errorText,
               ),
-              onChanged: (_) {
-                if (_errorText != null) {
-                  setState(() => _errorText = null);
-                }
-              },
             ),
             const SizedBox(height: 12),
             TextField(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/todo.dart';
+import '../state/todo_scope.dart';
 import '../widgets/todo_filter_widget.dart';
 import '../widgets/todo_input_widget.dart';
 import '../widgets/todo_item_widget.dart';
@@ -13,73 +13,22 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final List<Todo> _todos = [];
   TodoFilter _filter = TodoFilter.all;
 
-  void _addTodo(String title) {
-    setState(() {
-      _todos.add(Todo(
-        id: DateTime.now().toIso8601String(),
-        title: title,
-      ));
-    });
-  }
+  @override
+  Widget build(BuildContext context) {
+    debugPrint('build: HomeScreen');
+    final todoModel = TodoScope.of(context);
+    final todos = todoModel.todos;
 
-  void _toggleTodo(String id, bool? value) {
-    setState(() {
-      final index = _todos.indexWhere((t) => t.id == id);
-      if (index != -1) {
-        _todos[index] = _todos[index].copyWith(isCompleted: value ?? false);
-      }
-    });
-  }
+    final completedCount = todos.where((t) => t.isCompleted).length;
+    final totalCount = todos.length;
 
-  void _updateTodo(Todo updated) {
-    setState(() {
-      final index = _todos.indexWhere((t) => t.id == updated.id);
-      if (index != -1) {
-        _todos[index] = updated;
-      }
-    });
-  }
-
-  void _removeTodo(String id) {
-    final index = _todos.indexWhere((t) => t.id == id);
-    if (index == -1) return;
-    
-    final removedTodo = _todos[index];
-    setState(() {
-      _todos.removeAt(index);
-    });
-
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Видалено "${removedTodo.title}"'),
-        action: SnackBarAction(
-          label: 'Скасувати',
-          onPressed: () {
-            setState(() {
-              _todos.insert(index, removedTodo);
-            });
-          },
-        ),
-      ),
-    );
-  }
-
-  List<Todo> get _filteredTodos {
-    return _todos.where((todo) {
+    final filteredTodos = todos.where((todo) {
       if (_filter == TodoFilter.active) return !todo.isCompleted;
       if (_filter == TodoFilter.completed) return todo.isCompleted;
       return true;
     }).toList();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final completedCount = _todos.where((t) => t.isCompleted).length;
-    final totalCount = _todos.length;
 
     return Scaffold(
       appBar: AppBar(
@@ -87,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          TodoInputWidget(onAdd: _addTodo),
+          const TodoInputWidget(),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: TodoFilterWidget(
@@ -97,21 +46,32 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: _filteredTodos.length,
+              itemCount: filteredTodos.length,
               itemBuilder: (context, index) {
-                final todo = _filteredTodos[index];
+                final todo = filteredTodos[index];
                 return TodoItemWidget(
                   todo: todo,
-                  onToggle: (val) => _toggleTodo(todo.id, val),
-                  onDelete: () => _removeTodo(todo.id),
+                  onToggle: () => todoModel.toggle(todo.id),
+                  onDelete: () {
+                    final removedIndex = todoModel.todos.indexWhere((t) => t.id == todo.id);
+                    todoModel.remove(todo.id);
+
+                    ScaffoldMessenger.of(context).clearSnackBars();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Видалено "${todo.title}"'),
+                        action: SnackBarAction(
+                          label: 'Скасувати',
+                          onPressed: () => todoModel.restore(todo, removedIndex),
+                        ),
+                      ),
+                    );
+                  },
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => EditTodoScreen(
-                          todo: todo,
-                          onSave: _updateTodo,
-                        ),
+                        builder: (_) => EditTodoScreen(todoId: todo.id),
                       ),
                     );
                   },

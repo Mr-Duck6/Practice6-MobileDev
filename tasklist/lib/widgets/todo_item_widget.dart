@@ -3,7 +3,7 @@ import '../models/todo.dart';
 
 class TodoItemWidget extends StatelessWidget {
   final Todo todo;
-  final ValueChanged<bool?> onToggle;
+  final VoidCallback onToggle;
   final VoidCallback onDelete;
   final VoidCallback onTap;
 
@@ -38,7 +38,7 @@ class TodoItemWidget extends StatelessWidget {
         subtitle: todo.description.isNotEmpty ? Text(todo.description) : null,
         leading: Checkbox(
           value: todo.isCompleted,
-          onChanged: onToggle,
+          onChanged: (_) => onToggle(),
         ),
         onTap: onTap,
       ),

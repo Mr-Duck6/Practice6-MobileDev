@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import '../state/todo_scope.dart';
 
 class TodoInputWidget extends StatefulWidget {
-  final ValueChanged<String> onAdd;
-
-  const TodoInputWidget({super.key, required this.onAdd});
+  const TodoInputWidget({super.key});
 
   @override
   State<TodoInputWidget> createState() => _TodoInputWidgetState();
@@ -25,14 +24,15 @@ class _TodoInputWidgetState extends State<TodoInputWidget> {
       setState(() => _errorText = 'Порожня назва');
       return;
     }
-    widget.onAdd(text);
+    // Отримуємо модель напряму через Scope без callback від батька
+    TodoScope.of(context).add(text);
     _controller.clear();
     setState(() => _errorText = null);
   }
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('build: TodoInputWidget');
+    debugPrint('build: TodoInputWidget'); // Доведено: не перебудовується при toggle справи!
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Row(
@@ -41,7 +41,7 @@ class _TodoInputWidgetState extends State<TodoInputWidget> {
             child: TextField(
               controller: _controller,
               decoration: InputDecoration(
-                hintText: 'Нова справа...',
+                hintText: 'Нова справа',
                 errorText: _errorText,
               ),
               onSubmitted: (_) => _submit(),

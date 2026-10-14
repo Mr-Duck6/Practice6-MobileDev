@@ -1,17 +1,29 @@
-# tasklist
+## Варіант 2: Список справ
 
-A new Flutter project.
+### Інструкція запуску
+* Відкрити проект.
+* Перейти з No Device на Start Medium Phone API 35 mobile emulator (cold boot).
+* Створити новий термінал.
+* Ввести команду futter run.
 
-## Getting Started
+## Таблиця стану
+| Які дані | Де живуть | Чому саме там  |
+| :--- | :--- | :--- |
+| **Ефемерний стан**<br>• Текст у полях введення<br> Обраний фільтр списку <br> Розгорнуті картки / локальний UI | Усередині локальних StatefulWidget , через setState | Ці дані стосуються виключно відображення та взаємодії з конкретним дрібним елементом інтерфейсу, не впливають на глобальну бізнес-логіку та не повинні викликати перебудову всього додатка. |
+| Спільний стан<br> Перелік усіх справ <br> Логіка додавання, видалення, зміни та відновлення слів  | У класі TodoModel , який надається через InheritedNotifier  | Це глобальні дані програми, до яких мають доступ кілька різних екранів та віджетів . Використання InheritedNotifier дозволяє точково перебудовувати лише ті віджети, які реально залежать від даних, без використання сторонніх бібліотек чи зайвого прокидування колбеків через конструктори. |
 
-This project is a starting point for a Flutter application.
+## Журнал
 
-A few resources to get you started if this is your first Flutter project:
+### Сценарій 1: Позначення справи виконаною / невиконаною
+Коли користувач натискає на чекбокс або елемент списку, щоб змінити статус справи, у консолі фіксується такий журнал:
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```text
+I/flutter (18425): build: HomeScreen
+I/flutter (18425): build: TodoItemWidget id_12345
+I/flutter (18425): build: TodoInputWidget
+I/flutter (18425): build: HomeScreen
+I/flutter (18425): build: TodoItemWidget id_67890
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Використання ШІ
+У ході виконання завдання ШІ був використован для вивчення теоретичних відомостей про State Management.
